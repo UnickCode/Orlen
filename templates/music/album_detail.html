@@ -183,7 +183,7 @@
 <body>
 
 <nav>
-  <a class="nav-brand" href="/">♫ MyMusic</a>
+  <a class="nav-brand" href="/">Orlen</a>
   <a href="/">Home</a>
   <a href="/spotify/search/?tab=albums">Browse</a>
   {% if request.session.spotify_token %}
@@ -198,21 +198,20 @@
 
   <aside class="sidebar">
     <div>
-      <h1 class="logo">SoundWave</h1>
       <div class="menu">
-        <a class="menu-item" href="/spotify/search/?tab=tracks">🎵 Tracks</a>
-        <a class="menu-item active-menu" href="/spotify/search/?tab=albums">💿 Albums</a>
-        <a class="menu-item" href="/spotify/search/?tab=artists">🎤 Artists</a>
+        <a class="menu-item" href="/spotify/search/?tab=tracks">Tracks</a>
+        <a class="menu-item active-menu" href="/spotify/search/?tab=albums">Albums</a>
+        <a class="menu-item" href="/spotify/search/?tab=artists">Artists</a>
       </div>
       <h3 class="recent-title">RECENTLY PLAYED</h3>
       <div id="sidebar-recent">
         <p style="color:#555;font-size:0.8rem;">Play a track to see it here.</p>
       </div>
     </div>
-    <div class="upgrade">
+    <!-- <div class="upgrade">
       <p>Upgrade Plan</p>
       <button>Go Premium</button>
-    </div>
+    </div> -->
   </aside>
 
   <main class="main">

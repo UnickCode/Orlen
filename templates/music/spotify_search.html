@@ -641,11 +641,198 @@
         background: #fff;
         cursor: pointer;
       }
+
+
+  /* style for dicover dashboard */
+      .video-categories{
+          display:flex;
+          gap:15px;
+          align-items:center;
+          overflow-x:auto;
+          padding:20px 0;
+          scrollbar-width:none;
+      }
+
+      .video-categories::-webkit-scrollbar{
+          display:none;
+      }
+
+      .category{
+
+          display:flex;
+          align-items:center;
+          gap:10px;
+
+          padding:12px 22px;
+
+          background:#1d1d1d;
+          color:#fff;
+
+          border:none;
+          border-radius:30px;
+
+          cursor:pointer;
+
+          font-size:15px;
+          font-weight:600;
+
+          transition:.3s;
+          white-space:nowrap;
+      }
+
+      .category:hover{
+
+          background:#2b2b2b;
+          transform:translateY(-2px);
+
+      }
+
+      .category.active{
+
+          background:#1DB954;
+          color:#000;
+      }
+
+      .category i{
+
+          font-size:14px;
+
+      }
+
+      .video-section{
+
+          margin-top:50px;
+
+      }
+
+      .section-header{
+
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+
+          margin-bottom:20px;
+
+      }
+
+      .section-header h2{
+
+          color:white;
+          font-size:24px;
+
+      }
+
+      .section-header a{
+
+          color:#1DB954;
+          text-decoration:none;
+          font-weight:600;
+
+      }
+
+      .video-row{
+
+          display:flex;
+          gap:20px;
+
+          overflow-x:auto;
+
+          padding-bottom:10px;
+
+          scrollbar-width:none;
+
+      }
+
+      .video-row::-webkit-scrollbar{
+
+          display:none;
+
+      }
+
+      .video-card{
+
+          min-width:300px;
+
+          background:#1d1d1d;
+
+          border-radius:16px;
+
+          overflow:hidden;
+
+          cursor:pointer;
+
+          transition:.35s;
+
+          position:relative;
+
+      }
+
+      .video-card:hover{
+
+          transform:translateY(-8px);
+
+      }
+
+      .video-card img{
+
+          width:100%;
+
+          height:180px;
+
+          object-fit:cover;
+
+      }
+
+      .duration{
+
+          position:absolute;
+
+          top:145px;
+
+          right:10px;
+
+          background:black;
+
+          color:white;
+
+          padding:4px 8px;
+
+          border-radius:6px;
+
+          font-size:12px;
+
+      }
+
+      .video-info{
+
+          padding:15px;
+
+      }
+
+      .video-info h4{
+
+          color:white;
+
+          margin-bottom:8px;
+
+          font-size:18px;
+
+      }
+
+      .video-info p{
+
+          color:#9b9b9b;
+
+          font-size:14px;
+
+      }
+
+      
     </style>
   </head>
   <body>
     <nav>
-      <a class="nav-brand" href="/">♫ MyMusic</a>
+      <a class="nav-brand" href="/">Orlen</a>
       <a href="/">Home</a>
       <a href="/spotify/search/" class="active">Browse</a>
       {% if request.session.spotify_token %}
@@ -660,22 +847,22 @@
       <!-- SIDEBAR -->
       <aside class="sidebar">
         <div>
-          <h1 class="logo">SoundWave</h1>
+
           <div class="menu">
             <a
               class="menu-item {% if active_tab == 'tracks' %}active-menu{% endif %}"
               href="?tab=tracks{% if query %}&q={{ query }}{% endif %}"
-              >🎵 Tracks</a
+              >Explore</a
             >
             <a
               class="menu-item {% if active_tab == 'albums' %}active-menu{% endif %}"
               href="?tab=albums{% if query %}&q={{ query }}{% endif %}"
-              >💿 Albums</a
+              >Albums</a
             >
             <a
               class="menu-item {% if active_tab == 'artists' %}active-menu{% endif %}"
               href="?tab=artists{% if query %}&q={{ query }}{% endif %}"
-              >🎤 Artists</a
+              >Artists</a
             >
           </div>
           <h3 class="recent-title">RECENTLY PLAYED</h3>
@@ -693,7 +880,362 @@
 
       <!-- MAIN -->
       <main class="main">
-        <div class="search-wrap">
+
+        <!-- here i will be building a discovery dashboard -->
+
+        <h2>Discover Videos</h2>
+        <p>Podcasts, interviews, breakdowns and more from YouTube</p>
+
+        <div class="video-categories">
+
+            <button class="category active" data-filter="all">
+                All
+            </button>
+
+            <button class="category" data-filter="podcast">
+                <i class="fa-solid fa-microphone"></i>
+                Podcasts
+            </button>
+
+            <button class="category" data-filter="interview">
+                <i class="fa-solid fa-user"></i>
+                Interviews
+            </button>
+
+            <button class="category" data-filter="breakdown">
+                <i class="fa-solid fa-book-open"></i>
+                Album Breakdown
+            </button>
+
+            <button class="category" data-filter="live">
+                <i class="fa-solid fa-music"></i>
+                Live
+            </button>
+
+            <button class="category" data-filter="reaction">
+                <i class="fa-solid fa-heart"></i>
+                Reactions
+            </button>
+
+            <button class="category" data-filter="documentary">
+                <i class="fa-solid fa-film"></i>
+                Documentaries
+            </button>
+
+        </div>
+
+
+        <!-- ================= Podcasts ================= -->
+
+        <section class="video-section">
+
+            <div class="section-header">
+
+                <h2>🎙 Podcasts & Interviews</h2>
+
+                <a href="#">View All</a>
+
+            </div>
+
+            <div class="video-row">
+
+                <div class="video-card">
+
+                    <img src="https://picsum.photos/400/220?1">
+
+                    <span class="duration">1:24:13</span>
+
+                    <div class="video-info">
+
+                        <h4>Kendrick Lamar Full Interview</h4>
+
+                        <p>Nardwuar • 2.3M views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+
+                    <img src="https://picsum.photos/400/220?2">
+
+                    <span class="duration">58:22</span>
+
+                    <div class="video-info">
+
+                        <h4>Drake Podcast</h4>
+
+                        <p>Drink Champs • 840K views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+
+                    <img src="https://picsum.photos/400/220?3">
+
+                    <span class="duration">43:12</span>
+
+                    <div class="video-info">
+
+                        <h4>Tyler Creator Interview</h4>
+
+                        <p>Apple Music • 980K views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+
+                    <img src="https://picsum.photos/400/220?4">
+
+                    <span class="duration">36:09</span>
+
+                    <div class="video-info">
+
+                        <h4>Future Speaks About Music</h4>
+
+                        <p>Complex • 450K views</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= Album Breakdowns ================= -->
+
+        <section class="video-section">
+
+            <div class="section-header">
+
+                <h2>📚 Album Breakdowns</h2>
+
+                <a href="#">View All</a>
+
+            </div>
+
+            <div class="video-row">
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?5">
+                    <span class="duration">18:12</span>
+
+                    <div class="video-info">
+
+                        <h4>Mr Morale Explained</h4>
+
+                        <p>Music Nerd • 620K views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?6">
+                    <span class="duration">22:05</span>
+
+                    <div class="video-info">
+
+                        <h4>DAMN Story Analysis</h4>
+
+                        <p>HipHop Daily • 880K views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?7">
+                    <span class="duration">17:55</span>
+
+                    <div class="video-info">
+
+                        <h4>Astroworld Breakdown</h4>
+
+                        <p>Music Theory • 510K views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?8">
+                    <span class="duration">19:02</span>
+
+                    <div class="video-info">
+
+                        <h4>Graduation Explained</h4>
+
+                        <p>Rap Central • 930K views</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= Live ================= -->
+
+        <section class="video-section">
+
+            <div class="section-header">
+
+                <h2>🎤 Live Performances</h2>
+
+                <a href="#">View All</a>
+
+            </div>
+
+            <div class="video-row">
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?9">
+                    <span class="duration">8:14</span>
+
+                    <div class="video-info">
+
+                        <h4>Kendrick Live</h4>
+
+                        <p>Coachella • 5.4M views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?10">
+                    <span class="duration">11:22</span>
+
+                    <div class="video-info">
+
+                        <h4>J Cole Dreamville</h4>
+
+                        <p>Dreamville • 2.1M views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?11">
+                    <span class="duration">6:51</span>
+
+                    <div class="video-info">
+
+                        <h4>Travis Scott Rolling Loud</h4>
+
+                        <p>Rolling Loud • 4.7M views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?12">
+                    <span class="duration">7:40</span>
+
+                    <div class="video-info">
+
+                        <h4>Tyler Tiny Desk</h4>
+
+                        <p>NPR Music • 6M views</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= Documentary ================= -->
+
+        <section class="video-section">
+
+            <div class="section-header">
+
+                <h2>📰 Music Documentaries</h2>
+
+                <a href="#">View All</a>
+
+            </div>
+
+            <div class="video-row">
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?13">
+                    <span class="duration">54:22</span>
+
+                    <div class="video-info">
+
+                        <h4>The Rise of Kendrick Lamar</h4>
+
+                        <p>BBC • 1.2M views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?14">
+                    <span class="duration">48:15</span>
+
+                    <div class="video-info">
+
+                        <h4>The Story of Hip Hop</h4>
+
+                        <p>VICE • 3.4M views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?15">
+                    <span class="duration">1:10:44</span>
+
+                    <div class="video-info">
+
+                        <h4>Inside TDE</h4>
+
+                        <p>Complex • 900K views</p>
+
+                    </div>
+
+                </div>
+
+                <div class="video-card">
+                    <img src="https://picsum.photos/400/220?16">
+                    <span class="duration">39:33</span>
+
+                    <div class="video-info">
+
+                        <h4>Behind The Album</h4>
+
+                        <p>Apple Music • 780K views</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+        
+        
+
+        
+       <!-- <div class="search-wrap">
           <form class="search-form" method="GET" action="">
             <input
               class="search-input"
@@ -706,9 +1248,9 @@
             <input type="hidden" name="tab" value="{{ active_tab }}" />
             <button class="search-btn" type="submit">Search</button>
           </form>
-        </div>
+        </div> -->
 
-        <div class="tabs">
+       <!-- <div class="tabs">
           <a
             class="tab {% if active_tab == 'tracks' %}active{% endif %}"
             href="?tab=tracks{% if query %}&q={{ query }}{% endif %}"
@@ -727,14 +1269,14 @@
           >
             Artists{% if artists %} ({{ artists|length }}){% endif %}
           </a>
-        </div>
+        </div> -->
 
         <div class="content">
           {% if active_tab == 'tracks' %} {% if tracks %}
-          <p class="count">
+         <!-- <p class="count">
             {% if query %}{{ tracks|length }} result{{ tracks|length|pluralize }} for "{{ query }}"{% else %}{{ tracks|length }} track{{ tracks|length|pluralize }} in your library{% endif %}
-          </p>
-          <div class="track-list">
+          </p> -->
+         <!-- <div class="track-list">
             {% for track in tracks %}
             <div
               class="track-item"
@@ -769,8 +1311,8 @@
               {% endif %}
             </div>
             {% endfor %}
-          </div>
-          {% else %}
+          </div> -->
+         <!-- {% else %}
           <div class="empty">
             <h2>No tracks{% if query %} found{% endif %}</h2>
             <p>
@@ -778,8 +1320,16 @@
               else %}Your library is empty.{% endif %}<br />
               <a href="/admin/music/spotify-import/">Import from Spotify →</a>
             </p>
-          </div>
+          </div> -->
           {% endif %} {% elif active_tab == 'albums' %} {% if albums %}
+
+
+
+
+
+          
+          
+          
           <p class="count">
             {% if query %}{{ albums|length }} result{{ albums|length|pluralize }} for "{{ query }}"{% else %}{{ albums|length }} album{{ albums|length|pluralize }} in your library{% endif %}
           </p>
