@@ -1,0 +1,487 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Import from Spotify | Admin{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  .spotify-import { max-width: 860px; }
+
+  .sp-info {
+    background: #e8f4fd; border: 1px solid #bee5eb;
+    border-radius: 8px; padding: 0.85rem 1.25rem;
+    margin-bottom: 1.5rem; color: #0c5460; font-size: 0.9rem;
+  }
+  .sp-info ol { margin: 0.4rem 0 0 1.2rem; padding: 0; }
+  .sp-info li { margin-bottom: 0.2rem; }
+  .sp-note {
+    background: #fff8e1; border: 1px solid #ffe082;
+    border-radius: 8px; padding: 0.75rem 1.25rem;
+    margin-bottom: 1.5rem; color: #5d4037; font-size: 0.85rem;
+  }
+  .sp-error {
+    background: #f8d7da; border: 1px solid #f5c6cb;
+    border-radius: 8px; padding: 0.75rem 1.25rem;
+    margin-bottom: 1.5rem; color: #721c24;
+  }
+
+  .sp-input-row {
+    display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;
+  }
+  .sp-input-row input[type="text"] {
+    flex: 1; min-width: 260px;
+    padding: 0.6rem 1rem;
+    border: 2px solid #1db954; border-radius: 6px; font-size: 0.95rem;
+    color: #000;
+  }
+  .sp-input-row input[type="text"]::placeholder { color: #666; }
+  .sp-input-row select {
+    padding: 0.6rem 0.9rem; border: 1px solid #ccc;
+    border-radius: 6px; font-size: 0.9rem; background: #fff; color: #000;
+  }
+  .sp-input-row button {
+    background: #1db954; color: #000; border: none;
+    border-radius: 6px; padding: 0.6rem 1.4rem;
+    font-weight: 700; cursor: pointer; font-size: 0.95rem; white-space: nowrap;
+  }
+  .sp-input-row button:hover { background: #17a348; }
+  .sp-hint { font-size: 0.8rem; color: #888; margin-bottom: 1.75rem; }
+
+  .sp-edit-card {
+    background: #f9f9f9; border: 1px solid #e0e0e0;
+    border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem;
+  }
+  .sp-edit-header {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem 1.25rem; border-bottom: 1px solid #e0e0e0; background: #fff;
+  }
+  .sp-edit-header img, .sp-cover-placeholder {
+    width: 80px; height: 80px; border-radius: 6px;
+    object-fit: cover; flex-shrink: 0;
+    background: #ddd; display: flex; align-items: center;
+    justify-content: center; font-size: 2rem; color: #aaa;
+  }
+  .sp-edit-header img.circle, .sp-cover-placeholder.circle { border-radius: 50%; }
+  .sp-edit-kind {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    color: #1db954; letter-spacing: 0.06em; margin-bottom: 0.15rem;
+  }
+  .sp-edit-fetched-name { font-size: 1.1rem; font-weight: 800; line-height: 1.25; }
+  .sp-edit-id { font-size: 0.75rem; color: #aaa; margin-top: 0.2rem; }
+
+  .sp-edit-body { padding: 1.25rem; }
+  .sp-field { margin-bottom: 1rem; }
+  .sp-field label {
+    display: block; font-size: 0.82rem; font-weight: 700;
+    color: #555; margin-bottom: 0.3rem;
+  }
+  .sp-field label .optional { font-weight: 400; color: #aaa; font-size: 0.78rem; }
+  .sp-field input[type="text"],
+  .sp-field input[type="url"],
+  .sp-field select {
+    width: 100%; padding: 0.5rem 0.75rem;
+    border: 1px solid #ccc; border-radius: 5px;
+    font-size: 0.9rem; box-sizing: border-box; background: #fff;
+    color: #000;
+  }
+  .sp-field input[type="text"]::placeholder,
+  .sp-field input[type="url"]::placeholder { color: #666; }
+  .sp-field input:focus, .sp-field select:focus { border-color: #1db954; outline: none; }
+
+  .sp-album-selector {
+    border: 2px solid #1db954; border-radius: 8px;
+    overflow: hidden; margin-bottom: 1rem;
+  }
+  .sp-album-selector-header {
+    background: #1db954; color: #000; padding: 0.5rem 0.85rem;
+    font-size: 0.82rem; font-weight: 700;
+  }
+  .sp-album-list {
+    max-height: 220px; overflow-y: auto;
+  }
+  .sp-album-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.5rem 0.85rem; border-bottom: 1px solid #f0f0f0;
+    cursor: pointer; transition: background 0.1s;
+  }
+  .sp-album-row:last-child { border-bottom: none; }
+  .sp-album-row:hover { background: #f0faf3; }
+  .sp-album-row.selected { background: #d4f5e2; }
+  .sp-album-row img {
+    width: 40px; height: 40px; border-radius: 4px;
+    object-fit: cover; background: #eee; flex-shrink: 0;
+  }
+  .sp-album-row-info { flex: 1; min-width: 0; }
+  .sp-album-row-title {
+    font-weight: 700; font-size: 0.88rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sp-album-row-artist { font-size: 0.78rem; color: #666; }
+  .sp-album-check { color: #1db954; font-size: 1.1rem; display: none; }
+  .sp-album-row.selected .sp-album-check { display: block; }
+  .sp-album-search {
+    padding: 0.4rem 0.85rem; border-bottom: 1px solid #e0e0e0;
+  }
+  .sp-album-search input {
+    width: 100%; padding: 0.35rem 0.6rem;
+    border: 1px solid #ccc; border-radius: 4px;
+    font-size: 0.85rem; box-sizing: border-box; color: #000;
+  }
+  .sp-selected-album-badge {
+    display: none; align-items: center; gap: 0.5rem;
+    margin-top: 0.5rem; padding: 0.4rem 0.75rem;
+    background: #d4f5e2; border-radius: 5px; font-size: 0.82rem;
+  }
+  .sp-selected-album-badge.visible { display: flex; }
+  .sp-selected-album-badge button {
+    background: none; border: none; color: #c00;
+    cursor: pointer; font-size: 0.9rem; padding: 0; line-height: 1;
+  }
+
+  .sp-audio-upload {
+    border: 2px dashed #ccc; border-radius: 8px;
+    padding: 1.25rem; text-align: center;
+    margin-bottom: 1rem; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .sp-audio-upload:hover, .sp-audio-upload.dragover {
+    border-color: #1db954; background: #f0faf3;
+  }
+  .sp-audio-upload input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .sp-audio-upload-label { font-size: 0.9rem; color: #666; pointer-events: none; }
+  .sp-audio-upload-label strong { color: #1db954; }
+  .sp-audio-file-chosen {
+    display: none; margin-top: 0.5rem;
+    background: #d4f5e2; border-radius: 5px;
+    padding: 0.4rem 0.75rem; font-size: 0.82rem;
+    align-items: center; gap: 0.5rem;
+  }
+  .sp-audio-file-chosen.visible { display: flex; }
+  .sp-audio-file-chosen button {
+    background: none; border: none; color: #c00; cursor: pointer; font-size: 0.9rem; padding: 0;
+  }
+
+  .sp-fields-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem;
+  }
+
+  .sp-save-btn {
+    background: #1db954; color: #000; border: none;
+    border-radius: 6px; padding: 0.65rem 2rem;
+    font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.15s;
+  }
+  .sp-save-btn:hover { background: #17a348; }
+  .sp-save-btn:disabled { background: #aaa; color: #fff; cursor: default; }
+
+  .sp-links { margin-bottom: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .sp-links a {
+    font-size: 0.85rem; padding: 0.3rem 0.8rem;
+    border-radius: 4px; border: 1px solid #1db954;
+    color: #1db954; text-decoration: none;
+  }
+  .sp-links a:hover { background: #1db954; color: #000; }
+
+  #sp-toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: #212529; color: #fff;
+    padding: 0.75rem 1.25rem; border-radius: 6px;
+    font-size: 0.9rem; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; z-index: 9999; max-width: 340px;
+  }
+  #sp-toast.show { opacity: 1; }
+  #sp-toast.success { border-left: 4px solid #1db954; }
+  #sp-toast.error   { border-left: 4px solid #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="spotify-import">
+  <h1 style="margin-bottom:1rem;">🎵 Import from Spotify</h1>
+  <div class="sp-links">
+    <a href="{% url 'admin:music_track_changelist' %}">View Tracks</a>
+    <a href="{% url 'admin:music_album_changelist' %}">View Albums</a>
+    <a href="{% url 'admin:music_artist_changelist' %}">View Artists</a>
+  </div>
+  <div class="sp-info">
+    <strong>How to import:</strong>
+    <ol>
+      <li>Open <a href="https://open.spotify.com" target="_blank" rel="noopener">Spotify</a>, find a track, album, or artist.</li>
+      <li>Right-click (or tap ···) → <strong>Share</strong> → <strong>Copy link</strong>.</li>
+      <li>Paste below and click <strong>Fetch</strong> — name and cover fill in automatically.</li>
+      <li>For tracks: pick the album from your library and optionally attach an audio file from your device.</li>
+      <li>Click <strong>Save to Database</strong>.</li>
+    </ol>
+  </div>
+  <div class="sp-note">
+    ⚠️ <strong>No Spotify Premium required.</strong>
+    Name and cover art are fetched from Spotify's public embed system.
+    Fill in any additional details, then save.
+  </div>
+  {% if error %}
+  <div class="sp-error"><strong>Error:</strong> {{ error }}</div>
+  {% endif %}
+  <form method="GET" id="fetch-form">
+    <div class="sp-input-row">
+      <input type="text" name="url" value="{{ url_input }}" placeholder="Paste Spotify link… e.g. https://open.spotify.com/track/…" autofocus>
+      <select name="type" id="type-select">
+        <option value="track" {% if kind_override == "track" %}selected{% endif %}>Track</option>
+        <option value="album" {% if kind_override == "album" %}selected{% endif %}>Album</option>
+        <option value="artist" {% if kind_override == "artist" %}selected{% endif %}>Artist</option>
+      </select>
+      <button type="submit">Fetch</button>
+    </div>
+    <p class="sp-hint">The type selector is only needed when pasting a bare Spotify ID (not a full link).</p>
+  </form>
+  {% if preview %}
+  <div class="sp-edit-card">
+    <div class="sp-edit-header">
+      {% if preview.image %}
+        <img src="{{ preview.image }}" alt="{{ preview.name }}" {% if preview.kind == 'artist' %}class="circle"{% endif %}>
+      {% else %}
+        <div class="sp-cover-placeholder {% if preview.kind == 'artist' %}circle{% endif %}">{% if preview.kind == 'track' %}🎵{% elif preview.kind == 'album' %}💿{% else %}🎤{% endif %}</div>
+      {% endif %}
+      <div>
+        <div class="sp-edit-kind">{{ preview.kind }} — fetched from Spotify</div>
+        <div class="sp-edit-fetched-name">{{ preview.name }}</div>
+        <div class="sp-edit-id">ID: {{ preview.id }}</div>
+      </div>
+    </div>
+    <div class="sp-edit-body">
+      <input type="hidden" id="f-kind" value="{{ preview.kind }}">
+      <input type="hidden" id="f-spotify-id" value="{{ preview.id }}">
+      <input type="hidden" id="f-spotify-url" value="{{ preview.spotify_url }}">
+      <input type="hidden" id="f-album-id" value="">
+      <div class="sp-field">
+        <label>{% if preview.kind == 'album' %}Title{% else %}Name{% endif %} <span style="color:#dc3545">*</span></label>
+        <input type="text" id="f-name" value="{{ preview.name }}" placeholder="Name" required>
+      </div>
+      {% if preview.kind == 'track' %}
+      <div class="sp-field">
+        <label>Album <span class="optional">(pick from your library to auto-fill fields)</span></label>
+        {% if albums %}
+        <div class="sp-album-selector">
+          <div class="sp-album-selector-header">🎵 Your Albums — click to link</div>
+          <div class="sp-album-search">
+            <input type="text" id="album-search-input" placeholder="Search albums…" oninput="filterAlbums(this.value)">
+          </div>
+          <div class="sp-album-list" id="album-list">
+            {% for a in albums %}
+            <div class="sp-album-row" data-id="{{ a.id }}" data-title="{{ a.title }}" data-artist="{{ a.artist }}" data-cover="{{ a.cover }}" data-release="{{ a.release_date }}" onclick="selectAlbum(this)">
+              {% if a.cover %}
+                <img src="{{ a.cover }}" alt="{{ a.title }}" loading="lazy">
+              {% else %}
+                <img src="" alt="" style="background:#ddd;">
+              {% endif %}
+              <div class="sp-album-row-info">
+                <div class="sp-album-row-title">{{ a.title }}</div>
+                <div class="sp-album-row-artist">{{ a.artist }}</div>
+              </div>
+              <span class="sp-album-check">✓</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div style="padding:0.6rem;background:#fff8e1;border-radius:6px;font-size:0.85rem;color:#5d4037;margin-bottom:0.5rem;">
+          No albums in your database yet.
+          <a href="{% url 'admin:music_spotify_import' %}?type=album">Import an album first →</a>
+        </div>
+        {% endif %}
+        <div class="sp-selected-album-badge" id="selected-album-badge">
+          <span id="selected-album-text">—</span>
+          <button type="button" onclick="clearAlbum()" title="Remove">✕</button>
+        </div>
+      </div>
+      <div class="sp-field">
+        <label>Artist <span style="color:#dc3545">*</span> <span class="optional">— auto-filled when album is selected</span></label>
+        <input type="text" id="f-artist" placeholder="Artist name" required>
+      </div>
+      <div class="sp-fields-row">
+        <div class="sp-field">
+          <label>Album name <span class="optional">— auto-filled from selection</span></label>
+          <input type="text" id="f-album-name" placeholder="Album title">
+        </div>
+        <div class="sp-field">
+          <label>Release Date <span class="optional">(YYYY-MM-DD)</span></label>
+          <input type="text" id="f-release-date" placeholder="2024-01-15">
+        </div>
+      </div>
+      <div class="sp-field">
+        <label>Audio File <span class="optional">— upload from your device (MP3, WAV, M4A, FLAC…)</span></label>
+        <div class="sp-audio-upload" id="audio-drop-zone">
+          <input type="file" id="f-audio-file" accept="audio/*" onchange="onAudioFileChosen(this)">
+          <div class="sp-audio-upload-label">🎧 <strong>Click to choose</strong> or drag &amp; drop an audio file</div>
+        </div>
+        <div class="sp-audio-file-chosen" id="audio-chosen-badge">
+          <span id="audio-chosen-text">—</span>
+          <button type="button" onclick="clearAudio()" title="Remove">✕</button>
+        </div>
+      </div>
+      {% elif preview.kind == 'album' %}
+      <div class="sp-field">
+        <label>Artist <span style="color:#dc3545">*</span></label>
+        <input type="text" id="f-artist" placeholder="Artist name" required>
+      </div>
+      <div class="sp-fields-row">
+        <div class="sp-field">
+          <label>Release Date <span class="optional">(YYYY-MM-DD)</span></label>
+          <input type="text" id="f-release-date" placeholder="2024-01-15">
+        </div>
+        <div class="sp-field">
+          <label>Album Type <span class="optional"></span></label>
+          <input type="text" id="f-album-type" placeholder="album / single / EP">
+        </div>
+      </div>
+      {% elif preview.kind == 'artist' %}
+      <div class="sp-field">
+        <label>Genres <span class="optional">(comma-separated)</span></label>
+        <input type="text" id="f-genres" placeholder="hip hop, rap, pop">
+      </div>
+      {% endif %}
+      <div class="sp-field">
+        <label>Cover Image URL <span class="optional">— auto-fetched, editable</span></label>
+        <input type="url" id="f-image" value="{{ preview.image }}" placeholder="https://…">
+      </div>
+      <button class="sp-save-btn" id="save-btn" onclick="saveToDb(this)">Save to Database</button>
+      <span id="save-result" style="margin-left:1rem;font-size:0.88rem;color:#155724;display:none;"></span>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div id="sp-toast"></div>
+<script>
+  const ALBUMS = {{ albums|safe }};
+  const SAVE_URL = '/admin/music/spotify-import/save/';
+  const CSRF = '{{ csrf_token }}';
+
+  function selectAlbum(row) {
+    document.querySelectorAll('.sp-album-row').forEach(r => r.classList.remove('selected'));
+    row.classList.add('selected');
+    const id = row.dataset.id;
+    const title = row.dataset.title;
+    const artist = row.dataset.artist;
+    const cover = row.dataset.cover;
+    const release = row.dataset.release;
+    document.getElementById('f-album-id').value = id;
+    const fArtist = document.getElementById('f-artist');
+    const fAlbum = document.getElementById('f-album-name');
+    const fRelease = document.getElementById('f-release-date');
+    const fImage = document.getElementById('f-image');
+    if (fArtist && !fArtist.value) fArtist.value = artist;
+    if (fAlbum && !fAlbum.value) fAlbum.value = title;
+    if (fRelease && !fRelease.value) fRelease.value = release;
+    if (fImage && !fImage.value && cover) fImage.value = cover;
+    const badge = document.getElementById('selected-album-badge');
+    document.getElementById('selected-album-text').textContent = `Linked to: ${title} — ${artist}`;
+    badge.classList.add('visible');
+  }
+
+  function clearAlbum() {
+    document.querySelectorAll('.sp-album-row').forEach(r => r.classList.remove('selected'));
+    document.getElementById('f-album-id').value = '';
+    document.getElementById('selected-album-badge').classList.remove('visible');
+  }
+
+  function filterAlbums(q) {
+    const lower = q.toLowerCase();
+    document.querySelectorAll('.sp-album-row').forEach(row => {
+      const match = row.dataset.title.toLowerCase().includes(lower) || row.dataset.artist.toLowerCase().includes(lower);
+      row.style.display = match ? '' : 'none';
+    });
+  }
+
+  function onAudioFileChosen(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('audio-chosen-text').textContent = `${file.name}  (${(file.size / 1048576).toFixed(1)} MB)`;
+    document.getElementById('audio-chosen-badge').classList.add('visible');
+  }
+
+  function clearAudio() {
+    const inp = document.getElementById('f-audio-file');
+    inp.value = '';
+    document.getElementById('audio-chosen-badge').classList.remove('visible');
+  }
+
+  const dropZone = document.getElementById('audio-drop-zone');
+  if (dropZone) {
+    ['dragenter', 'dragover'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('dragover'); }));
+    dropZone.addEventListener('drop', ev => {
+      const file = ev.dataTransfer.files[0];
+      if (file) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('f-audio-file').files = dt.files;
+        onAudioFileChosen(document.getElementById('f-audio-file'));
+      }
+    });
+  }
+
+  function val(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('sp-toast');
+    t.textContent = msg;
+    t.className = 'show ' + type;
+    clearTimeout(t._hide);
+    t._hide = setTimeout(() => t.className = '', 4000);
+  }
+
+  function saveToDb(btn) {
+    const kind = val('f-kind');
+    const name = val('f-name');
+    if (!name) { showToast('Name is required', 'error'); return; }
+    if ((kind === 'track' || kind === 'album') && !val('f-artist')) {
+      showToast('Artist is required', 'error'); return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', CSRF);
+    fd.append('kind', kind);
+    fd.append('spotify_id', val('f-spotify-id'));
+    fd.append('name', name);
+    fd.append('artist', val('f-artist') || '');
+    fd.append('album_name', val('f-album-name') || '');
+    fd.append('album_id', val('f-album-id') || '');
+    fd.append('image', val('f-image') || '');
+    fd.append('spotify_url', val('f-spotify-url') || '');
+    fd.append('genres', val('f-genres') || '');
+    fd.append('release_date', val('f-release-date') || '');
+    fd.append('album_type', val('f-album-type') || '');
+    const audioInput = document.getElementById('f-audio-file');
+    if (audioInput && audioInput.files[0]) fd.append('audio_file', audioInput.files[0]);
+
+    fetch(SAVE_URL, { method: 'POST', body: fd })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) {
+          btn.textContent = data.created ? '✓ Added!' : '✓ Updated!';
+          const result = document.getElementById('save-result');
+          result.textContent = data.message;
+          result.style.display = 'inline';
+          showToast(data.message, 'success');
+          setTimeout(() => { btn.disabled = false; btn.textContent = 'Save to Database'; result.style.display = 'none'; }, 4000);
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Save to Database';
+          showToast('Error: ' + data.error, 'error');
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        btn.textContent = 'Save to Database';
+        showToast('Network error — try again', 'error');
+      });
+  }
+</script>
+{% endblock %}

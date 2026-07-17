@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Profile</title>
+  <style>
+    body { font-family: sans-serif; background: #121212; color: #fff; padding: 2rem; }
+    .card { background: #1e1e1e; border-radius: 12px; padding: 2rem; max-width: 480px; margin: auto; text-align: center; }
+    img { border-radius: 50%; width: 120px; height: 120px; object-fit: cover; margin-bottom: 1rem; }
+    h1 { font-size: 1.8rem; margin: 0.5rem 0; }
+    p { color: #aaa; }
+    .badge { display: inline-block; background: #1db954; color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin: 0.5rem 0; }
+    a { display: inline-block; margin-top: 1.5rem; color: #1db954; text-decoration: none; }
+    .links { margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn { background: #1db954; color: #000; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
+    .btn.outline { background: transparent; border: 1px solid #1db954; color: #1db954; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    {% if profile.images %}
+      <img src="{{ profile.images.0.url }}" alt="Profile photo">
+    {% endif %}
+    <h1>{{ profile.display_name }}</h1>
+    <span class="badge">{{ profile.product|title }}</span>
+    <p>{{ profile.email }}</p>
+    <p>{{ profile.followers.total }} followers &nbsp;·&nbsp; {{ profile.country }}</p>
+
+    <div class="links">
+      <a class="btn" href="/spotify/top-tracks/">My Top Tracks</a>
+      <a class="btn" href="/spotify/new-releases/">New Releases</a>
+      <a class="btn outline" href="/spotify/logout/">Logout</a>
+    </div>
+  </div>
+</body>
+</html>

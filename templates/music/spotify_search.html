@@ -1,0 +1,1127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% if query %}Search: {{ query }}{% else %}Browse Library{% endif %} –
+      MyMusic
+    </title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background: #121212;
+        color: #fff;
+        min-height: 100vh;
+      }
+
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1rem 2rem;
+        background: #000;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      nav a {
+        color: #b3b3b3;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+      nav a:hover,
+      nav a.active {
+        color: #fff;
+      }
+      .nav-brand {
+        color: #1db954;
+        font-size: 1.4rem;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        margin-right: auto;
+        text-decoration: none;
+      }
+
+      .search-wrap {
+        padding: 2rem 2rem 1rem;
+        max-width: 700px;
+      }
+      .search-form {
+        display: flex;
+        gap: 0.75rem;
+      }
+      .search-input {
+        flex: 1;
+        background: #242424;
+        border: none;
+        border-radius: 500px;
+        padding: 0.75rem 1.5rem;
+        color: #fff;
+        font-size: 1rem;
+        outline: none;
+        transition: background 0.2s;
+      }
+      .search-input::placeholder {
+        color: #6a6a6a;
+      }
+      .search-input:focus {
+        background: #2a2a2a;
+        outline: 2px solid #1db954;
+      }
+      .search-btn {
+        background: #1db954;
+        border: none;
+        border-radius: 500px;
+        padding: 0.75rem 1.75rem;
+        color: #000;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+      }
+      .search-btn:hover {
+        background: #1ed760;
+        transform: scale(1.03);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.5rem 2rem 0;
+        border-bottom: 1px solid #282828;
+      }
+      .tab {
+        padding: 0.6rem 1.4rem;
+        border-radius: 500px;
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #b3b3b3;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .tab:hover {
+        color: #fff;
+        background: #282828;
+      }
+      .tab.active {
+        background: #fff;
+        color: #000;
+      }
+
+      .content {
+        padding: 1.5rem 2rem 120px;
+      }
+      .count {
+        font-size: 0.82rem;
+        color: #6a6a6a;
+        margin-bottom: 1.2rem;
+      }
+
+      /* ── TRACK LIST ── */
+      .track-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .track-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: 6px;
+        transition: background 0.15s;
+        cursor: pointer;
+      }
+      .track-item:hover {
+        background: #282828;
+      }
+      .track-item.playing {
+        background: #1a3a27;
+      }
+      .track-item.playing .track-name {
+        color: #1db954;
+      }
+      .track-num {
+        width: 1.5rem;
+        text-align: center;
+        color: #6a6a6a;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+      }
+      .track-item.playing .track-num {
+        color: #1db954;
+      }
+      .track-cover {
+        width: 42px;
+        height: 42px;
+        border-radius: 4px;
+        object-fit: cover;
+        flex-shrink: 0;
+        background: #333;
+      }
+      .track-cover-placeholder {
+        width: 42px;
+        height: 42px;
+        border-radius: 4px;
+        background: #333;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: #555;
+      }
+      .track-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .track-name {
+        font-size: 0.95rem;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .track-artist {
+        font-size: 0.8rem;
+        color: #b3b3b3;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .track-album-col {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.82rem;
+        color: #b3b3b3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: none;
+      }
+      .track-duration {
+        font-size: 0.82rem;
+        color: #6a6a6a;
+        flex-shrink: 0;
+      }
+      .track-play-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        background: #1db954;
+        color: #000;
+        font-size: 11px;
+        cursor: pointer;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      .track-item:hover .track-play-btn {
+        opacity: 1;
+      }
+      .track-item.playing .track-play-btn {
+        opacity: 1;
+        background: #fff;
+      }
+      .no-audio-badge {
+        font-size: 0.7rem;
+        color: #555;
+        flex-shrink: 0;
+        padding: 2px 6px;
+        border: 1px solid #333;
+        border-radius: 4px;
+      }
+      @media (min-width: 700px) {
+        .track-album-col {
+          display: block;
+        }
+      }
+
+      /* ── ALBUM / ARTIST CARDS ── */
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1.25rem;
+      }
+      .card {
+        background: #181818;
+        border-radius: 8px;
+        padding: 1rem;
+        transition: background 0.2s;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        cursor: pointer;
+      }
+      .card:hover {
+        background: #282828;
+      }
+      .card-img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-bottom: 0.75rem;
+        background: #333;
+        display: block;
+      }
+      .card-img-placeholder {
+        width: 100%;
+        aspect-ratio: 1;
+        background: #2a2a2a;
+        border-radius: 4px;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #444;
+      }
+      .card-img.circle {
+        border-radius: 50%;
+      }
+      .card-img-placeholder.circle {
+        border-radius: 50%;
+      }
+      .card-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .card-sub {
+        font-size: 0.78rem;
+        color: #b3b3b3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .popularity-bar {
+        height: 3px;
+        background: #333;
+        border-radius: 2px;
+        margin-top: 6px;
+        overflow: hidden;
+      }
+      .popularity-fill {
+        height: 100%;
+        background: #1db954;
+        border-radius: 2px;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 4rem 1rem;
+        color: #6a6a6a;
+      }
+      .empty h2 {
+        font-size: 1.6rem;
+        color: #fff;
+        margin-bottom: 0.5rem;
+      }
+      .empty p {
+        font-size: 0.95rem;
+      }
+      .empty a {
+        color: #1db954;
+        text-decoration: none;
+      }
+      .empty a:hover {
+        text-decoration: underline;
+      }
+
+      /* ── LAYOUT ── */
+      .app {
+        display: flex;
+        height: calc(100vh - 56px);
+      }
+
+      .sidebar {
+        width: 260px;
+        background: #0f0f0f;
+        border-right: 1px solid #27272a;
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow-y: auto;
+        flex-shrink: 0;
+      }
+
+      .logo {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 30px;
+      }
+      .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .menu-item {
+        padding: 12px 16px;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: 0.3s;
+        color: #d4d4d8;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: block;
+      }
+      .menu-item:hover {
+        background: #18181b;
+      }
+      .menu-item.active-menu {
+        background: #1db954;
+        color: black;
+        font-weight: bold;
+      }
+
+      .recent-title {
+        margin-top: 30px;
+        color: #71717a;
+        letter-spacing: 3px;
+        font-size: 11px;
+        margin-bottom: 15px;
+      }
+
+      .recent-track {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-bottom: 6px;
+      }
+      .recent-track:hover {
+        background: #18181b;
+      }
+      .recent-track img {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+      .recent-track .r-name {
+        font-size: 0.85rem;
+      }
+      .recent-track .r-artist {
+        color: #71717a;
+        font-size: 12px;
+      }
+
+      .upgrade {
+        background: #18181b;
+        padding: 18px;
+        border-radius: 20px;
+        border: 1px solid #27272a;
+        margin-top: 20px;
+      }
+      .upgrade p {
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+      }
+      .upgrade button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 14px;
+        background: #1db954;
+        color: black;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .main {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 20px;
+      }
+
+      /* ── PLAYER ── */
+      .player {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 88px;
+        background: #0d0d0d;
+        border-top: 1px solid #27272a;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        z-index: 100;
+        transform: translateY(100%);
+        transition: transform 0.25s ease;
+      }
+      .player.active {
+        transform: translateY(0);
+      }
+
+      .player-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 280px;
+        min-width: 0;
+      }
+      .player-cover {
+        width: 54px;
+        height: 54px;
+        border-radius: 10px;
+        object-fit: cover;
+        flex-shrink: 0;
+        background: #282828;
+      }
+      .player-cover-placeholder {
+        width: 54px;
+        height: 54px;
+        border-radius: 10px;
+        background: #282828;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: #555;
+      }
+      .player-track-name {
+        font-size: 0.88rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .player-track-artist {
+        font-size: 0.75rem;
+        color: #b3b3b3;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .player-center {
+        flex: 1;
+        max-width: 640px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .control-buttons {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .ctrl-btn {
+        background: none;
+        border: none;
+        color: #b3b3b3;
+        font-size: 18px;
+        cursor: pointer;
+        transition:
+          color 0.15s,
+          transform 0.1s;
+        padding: 4px;
+      }
+      .ctrl-btn:hover {
+        color: #fff;
+        transform: scale(1.1);
+      }
+      .ctrl-btn.active-ctrl {
+        color: #1db954;
+      }
+      .play-pause-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: none;
+        background: #fff;
+        color: #000;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          transform 0.1s,
+          background 0.15s;
+      }
+      .play-pause-btn:hover {
+        transform: scale(1.06);
+        background: #f0f0f0;
+      }
+
+      .progress-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .time-label {
+        font-size: 11px;
+        color: #6a6a6a;
+        flex-shrink: 0;
+        width: 36px;
+        text-align: center;
+      }
+      .progress-bar-wrap {
+        flex: 1;
+        height: 4px;
+        background: #3e3e3e;
+        border-radius: 2px;
+        cursor: pointer;
+        position: relative;
+      }
+      .progress-bar-wrap:hover {
+        height: 6px;
+      }
+      .progress-bar-fill {
+        height: 100%;
+        background: #1db954;
+        border-radius: 2px;
+        pointer-events: none;
+        transition: width 0.1s linear;
+      }
+
+      .player-right {
+        width: 200px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 14px;
+      }
+      .volume-icon {
+        color: #b3b3b3;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .volume-slider {
+        -webkit-appearance: none;
+        width: 90px;
+        height: 4px;
+        border-radius: 2px;
+        background: #3e3e3e;
+        outline: none;
+        cursor: pointer;
+      }
+      .volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fff;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a class="nav-brand" href="/">♫ MyMusic</a>
+      <a href="/">Home</a>
+      <a href="/spotify/search/" class="active">Browse</a>
+      {% if request.session.spotify_token %}
+      <a href="/spotify/profile/">Profile</a>
+      <a href="/spotify/logout/">Logout</a>
+      {% else %}
+      <a href="/spotify/login/" style="color: #1db954">Connect Spotify</a>
+      {% endif %}
+    </nav>
+
+    <div class="app">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div>
+          <h1 class="logo">SoundWave</h1>
+          <div class="menu">
+            <a
+              class="menu-item {% if active_tab == 'tracks' %}active-menu{% endif %}"
+              href="?tab=tracks{% if query %}&q={{ query }}{% endif %}"
+              >🎵 Tracks</a
+            >
+            <a
+              class="menu-item {% if active_tab == 'albums' %}active-menu{% endif %}"
+              href="?tab=albums{% if query %}&q={{ query }}{% endif %}"
+              >💿 Albums</a
+            >
+            <a
+              class="menu-item {% if active_tab == 'artists' %}active-menu{% endif %}"
+              href="?tab=artists{% if query %}&q={{ query }}{% endif %}"
+              >🎤 Artists</a
+            >
+          </div>
+          <h3 class="recent-title">RECENTLY PLAYED</h3>
+          <div id="sidebar-recent">
+            <p style="color: #555; font-size: 0.8rem">
+              Play a track to see it here.
+            </p>
+          </div>
+        </div>
+       <!-- <div class="upgrade">
+          <p>Upgrade Plan</p>
+          <button>Go Premium</button>
+        </div> -->
+      </aside>
+
+      <!-- MAIN -->
+      <main class="main">
+        <div class="search-wrap">
+          <form class="search-form" method="GET" action="">
+            <input
+              class="search-input"
+              type="text"
+              name="q"
+              value="{{ query }}"
+              placeholder="Search tracks, albums, artists…"
+              autofocus
+            />
+            <input type="hidden" name="tab" value="{{ active_tab }}" />
+            <button class="search-btn" type="submit">Search</button>
+          </form>
+        </div>
+
+        <div class="tabs">
+          <a
+            class="tab {% if active_tab == 'tracks' %}active{% endif %}"
+            href="?tab=tracks{% if query %}&q={{ query }}{% endif %}"
+          >
+            Tracks{% if tracks %} ({{ tracks|length }}){% endif %}
+          </a>
+          <a
+            class="tab {% if active_tab == 'albums' %}active{% endif %}"
+            href="?tab=albums{% if query %}&q={{ query }}{% endif %}"
+          >
+            Albums{% if albums %} ({{ albums|length }}){% endif %}
+          </a>
+          <a
+            class="tab {% if active_tab == 'artists' %}active{% endif %}"
+            href="?tab=artists{% if query %}&q={{ query }}{% endif %}"
+          >
+            Artists{% if artists %} ({{ artists|length }}){% endif %}
+          </a>
+        </div>
+
+        <div class="content">
+          {% if active_tab == 'tracks' %} {% if tracks %}
+          <p class="count">
+            {% if query %}{{ tracks|length }} result{{ tracks|length|pluralize }} for "{{ query }}"{% else %}{{ tracks|length }} track{{ tracks|length|pluralize }} in your library{% endif %}
+          </p>
+          <div class="track-list">
+            {% for track in tracks %}
+            <div
+              class="track-item"
+              data-track-id="{{ track.id }}"
+              onclick="playTrackById({{ track.id }})"
+            >
+              <span class="track-num">{{ forloop.counter }}</span>
+              {% if track.cover %}
+              <img
+                class="track-cover"
+                src="{{ track.cover }}"
+                alt="{{ track.name }}"
+              />
+              {% else %}
+              <div class="track-cover-placeholder">♪</div>
+              {% endif %}
+              <div class="track-info">
+                <div class="track-name">{{ track.name }}</div>
+                <div class="track-artist">{{ track.artist }}</div>
+              </div>
+              <div class="track-album-col">{{ track.album }}</div>
+              <span class="track-duration">{{ track.duration_fmt }}</span>
+              {% if track.audio_file or track.preview_url %}
+              <button
+                class="track-play-btn"
+                onclick="event.stopPropagation(); playTrackById({{ track.id }})"
+              >
+                ▶
+              </button>
+              {% else %}
+              <span class="no-audio-badge">no audio</span>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty">
+            <h2>No tracks{% if query %} found{% endif %}</h2>
+            <p>
+              {% if query %}No tracks matching "{{ query }}" in your library.{%
+              else %}Your library is empty.{% endif %}<br />
+              <a href="/admin/music/spotify-import/">Import from Spotify →</a>
+            </p>
+          </div>
+          {% endif %} {% elif active_tab == 'albums' %} {% if albums %}
+          <p class="count">
+            {% if query %}{{ albums|length }} result{{ albums|length|pluralize }} for "{{ query }}"{% else %}{{ albums|length }} album{{ albums|length|pluralize }} in your library{% endif %}
+          </p>
+          <div class="card-grid">
+            {% for album in albums %}
+            <a class="card" href="/album/{{ album.id }}/">
+              {% if album.cover %}
+              <img
+                class="card-img"
+                src="{{ album.cover }}"
+                alt="{{ album.title }}"
+              />
+              {% else %}
+              <div class="card-img-placeholder">💿</div>
+              {% endif %}
+              <div class="card-title">{{ album.title }}</div>
+              <div class="card-sub">
+                {{ album.release_date|slice:":4" }}{% if album.release_date %} ·
+                {% endif %}{{ album.artist }}
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty">
+            <h2>No albums{% if query %} found{% endif %}</h2>
+            <p>
+              {% if query %}No albums matching "{{ query }}" in your library.{%
+              else %}Your library is empty.{% endif %}<br />
+              <a href="/admin/music/spotify-import/">Import from Spotify →</a>
+            </p>
+          </div>
+          {% endif %} {% elif active_tab == 'artists' %} {% if artists %}
+          <p class="count">
+            {% if query %}{{ artists|length }} result{{ artists|length|pluralize }} for "{{ query }}"{% else %}{{ artists|length }} artist{{ artists|length|pluralize }} in your library{% endif %}
+          </p>
+          <div class="card-grid">
+            {% for artist in artists %}
+            <a
+              class="card"
+              href="{{ artist.spotify_url }}"
+              target="_blank"
+              rel="noopener"
+            >
+              {% if artist.image %}
+              <img
+                class="card-img circle"
+                src="{{ artist.image }}"
+                alt="{{ artist.name }}"
+              />
+              {% else %}
+              <div class="card-img-placeholder circle">🎤</div>
+              {% endif %}
+              <div class="card-title">{{ artist.name }}</div>
+              <div class="card-sub">
+                {{ artist.followers|default:"0" }} followers
+              </div>
+              {% if artist.popularity %}
+              <div class="popularity-bar">
+                <div
+                  class="popularity-fill"
+                  style="width:{{ artist.popularity }}%"
+                ></div>
+              </div>
+              {% endif %}
+            </a>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty">
+            <h2>No artists{% if query %} found{% endif %}</h2>
+            <p>
+              {% if query %}No artists matching "{{ query }}" in your library.{%
+              else %}Your library is empty.{% endif %}<br />
+              <a href="/admin/music/spotify-import/">Import from Spotify →</a>
+            </p>
+          </div>
+          {% endif %} {% endif %}
+        </div>
+      </main>
+    </div>
+
+    <!-- PLAYER -->
+    <div class="player">
+      <div class="player-left">
+        <div class="player-cover-placeholder" id="player-cover-wrap">♪</div>
+        <div style="min-width: 0">
+          <div class="player-track-name" id="player-track-name">
+            No track selected
+          </div>
+          <div class="player-track-artist" id="player-track-artist">—</div>
+        </div>
+      </div>
+
+      <div class="player-center">
+        <div class="control-buttons">
+          <button
+            class="ctrl-btn"
+            id="btn-repeat"
+            title="Repeat"
+            onclick="toggleRepeat()"
+          >
+            🔁
+          </button>
+          <button
+            class="ctrl-btn"
+            id="btn-prev"
+            title="Previous"
+            onclick="playPrev()"
+          >
+            ⏮
+          </button>
+          <button
+            class="play-pause-btn"
+            id="btn-playpause"
+            onclick="togglePlayPause()"
+          >
+            ▶
+          </button>
+          <button
+            class="ctrl-btn"
+            id="btn-stop"
+            title="Stop"
+            onclick="stopPlayback()"
+          >
+            ⏹
+          </button>
+          <button
+            class="ctrl-btn"
+            id="btn-next"
+            title="Next"
+            onclick="playNext()"
+          >
+            ⏭
+          </button>
+        </div>
+        <div class="progress-row">
+          <span class="time-label" id="time-current">0:00</span>
+          <div
+            class="progress-bar-wrap"
+            id="progress-bar"
+            onclick="seekTo(event)"
+          >
+            <div
+              class="progress-bar-fill"
+              id="progress-fill"
+              style="width: 0%"
+            ></div>
+          </div>
+          <span class="time-label" id="time-total">0:00</span>
+        </div>
+      </div>
+
+      <div class="player-right">
+        <span class="volume-icon">🔊</span>
+        <input
+          class="volume-slider"
+          type="range"
+          min="0"
+          max="1"
+          step="0.02"
+          value="1"
+          oninput="setVolume(this.value)"
+        />
+      </div>
+    </div>
+
+    <audio id="audio-player" preload="auto"></audio>
+
+    <script>
+      const QUEUE = {{ player_queue_json|safe }};
+      let currentIndex = -1;
+      let isRepeat = false;
+      const audio = document.getElementById('audio-player');
+
+
+
+      function fmtTime(secs) {
+        secs = Math.floor(secs || 0);
+        return `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+      }
+
+      function updatePlayerUI(track) {
+        document.getElementById('player-track-name').textContent = track.name;
+        document.getElementById('player-track-artist').textContent = track.artist;
+        const wrap = document.getElementById('player-cover-wrap');
+        if (track.cover) {
+          wrap.outerHTML = `<img class="player-cover" id="player-cover-wrap" src="${track.cover}" alt="${track.name}">`;
+        } else {
+          if (wrap.tagName === 'IMG') {
+            wrap.outerHTML = `<div class="player-cover-placeholder" id="player-cover-wrap">♪</div>`;
+          }
+        }
+        document.getElementById('time-total').textContent = track.duration_ms ? fmtTime(track.duration_ms / 1000) : '0:00';
+        addToRecent(track);
+      }
+
+      function setPlayingRow(trackId) {
+        document.querySelectorAll('.track-item').forEach(el => {
+          el.classList.remove('playing');
+          const btn = el.querySelector('.track-play-btn');
+          if (btn) btn.textContent = '▶';
+        });
+        if (trackId !== null) {
+          const row = document.querySelector(`.track-item[data-track-id="${trackId}"]`);
+          if (row) {
+            row.classList.add('playing');
+            const btn = row.querySelector('.track-play-btn');
+            if (btn) btn.textContent = '⏸';
+          }
+        }
+      }
+
+      function playByIndex(idx) {
+          console.log(idx);
+
+          if (QUEUE.length === 0) return;
+          if (idx < 0 || idx >= QUEUE.length) return;
+
+          currentIndex = idx;
+          console.log("currentIndex updated to:", currentIndex);
+          const track = QUEUE[idx];
+
+          audio.src = track.audio_url;
+          audio.load();
+          audio.play().catch(() => {});
+          updatePlayerUI(track);
+          setPlayingRow(track.id);
+          document.getElementById('btn-playpause').textContent = '⏸';
+          document.querySelector('.player').classList.add('active');
+      }
+
+      function playTrackById(dbId) {
+        const idx = QUEUE.findIndex(t => t.id === dbId);
+        if (idx === -1) {
+          alert('This track has no audio file. Upload one via the admin import tool.');
+          return;
+        }
+        if (currentIndex === idx) { togglePlayPause(); return; }
+        playByIndex(idx);
+      }
+
+      function togglePlayPause() {
+        if (QUEUE.length === 0) return;
+        if (currentIndex === -1) { playByIndex(0); return; }
+        if (audio.paused) {
+          audio.play().catch(() => {});
+          document.getElementById('btn-playpause').textContent = '⏸';
+          const btn = document.querySelector('.track-item.playing .track-play-btn');
+          if (btn) btn.textContent = '⏸';
+        } else {
+          audio.pause();
+          document.getElementById('btn-playpause').textContent = '▶';
+          const btn = document.querySelector('.track-item.playing .track-play-btn');
+          if (btn) btn.textContent = '▶';
+        }
+      }
+
+      function stopPlayback() {
+        audio.pause();
+        audio.currentTime = 0;
+        document.getElementById('btn-playpause').textContent = '▶';
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('time-current').textContent = '0:00';
+        setPlayingRow(null);
+        currentIndex = -1;
+        document.getElementById('player-track-name').textContent = 'No track selected';
+        document.getElementById('player-track-artist').textContent = '—';
+        const wrap = document.getElementById('player-cover-wrap');
+        if (wrap && wrap.tagName === 'IMG') {
+          wrap.outerHTML = `<div class="player-cover-placeholder" id="player-cover-wrap">♪</div>`;
+        }
+        document.querySelector('.player').classList.remove('active');
+      }
+
+      function playNext() { if (QUEUE.length) playByIndex(currentIndex + 1); }
+      function playPrev() {
+        if (!QUEUE.length) return;
+        if (audio.currentTime > 3) { audio.currentTime = 0; } else { playByIndex(currentIndex - 1); }
+      }
+
+      function toggleRepeat() {
+        isRepeat = !isRepeat;
+        audio.loop = isRepeat;
+        document.getElementById('btn-repeat').classList.toggle('active-ctrl', isRepeat);
+      }
+
+      function seekTo(e) {
+        if (!audio.duration) return;
+        const bar = document.getElementById('progress-bar');
+        audio.currentTime = (e.offsetX / bar.offsetWidth) * audio.duration;
+      }
+
+      function setVolume(val) { audio.volume = parseFloat(val); }
+
+      audio.addEventListener('timeupdate', () => {
+        if (!audio.duration) return;
+        const pct = (audio.currentTime / audio.duration) * 100;
+        document.getElementById('progress-fill').style.width = `${pct}%`;
+        document.getElementById('time-current').textContent = fmtTime(audio.currentTime);
+      });
+
+      audio.addEventListener('ended', () => {
+        if (!isRepeat) {
+          if (currentIndex < QUEUE.length - 1) { playByIndex(currentIndex + 1); }
+          else {
+            document.getElementById('btn-playpause').textContent = '▶';
+            setPlayingRow(null);
+          }
+        }
+      });
+
+      audio.addEventListener('loadedmetadata', () => {
+        document.getElementById('time-total').textContent = fmtTime(audio.duration);
+      });
+
+      const recentTracks = [];
+      function addToRecent(track) {
+        const i = recentTracks.findIndex(t => t.id === track.id);
+        if (i !== -1) recentTracks.splice(i, 1);
+        recentTracks.unshift(track);
+        if (recentTracks.length > 5) recentTracks.pop();
+        renderRecent();
+      }
+      function renderRecent() {
+        document.getElementById('sidebar-recent').innerHTML = recentTracks.map(t => `
+          <div class="recent-track" onclick="playTrackById(${t.id})">
+            ${t.cover
+              ? `<img src="${t.cover}" alt="${t.name}">`
+              : `<div style="width:44px;height:44px;border-radius:8px;background:#282828;display:flex;align-items:center;justify-content:center;color:#555;flex-shrink:0;">♪</div>`}
+            <div>
+              <p class="r-name">${t.name}</p>
+              <span class="r-artist">${t.artist}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      document.querySelector('.search-form').addEventListener('submit', function() {
+        const activeTab = new URLSearchParams(window.location.search).get('tab') || 'tracks';
+        this.querySelector('[name="tab"]').value = activeTab;
+      });
+    </script>
+  </body>
+</html>
