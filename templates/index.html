@@ -36,9 +36,16 @@
     }
 
     .nav-links a {
-      color: #bbb;
-      margin: 0 12px;
+      color: #b3b3b3;
       text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 0 12px;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: #fff;
     }
 
     .auth button {
@@ -295,11 +302,10 @@
 
   <!-- NAVBAR -->
   <div class="navbar">
-    <div class="logo">Orlen</div>
+    <div class="logo" href="{% url 'index' %}">Orlen</div>
     <div class="nav-links">
-      <a href="#">Home</a>
-      <a href="{% url 'spotify_search' %}">Albums</a>
-      <a href="#">Podcasts</a>
+      <a href="{% url 'index' %}" class= "active">Home</a>
+      <a href="{% url 'spotify_search' %}">Browse</a>
       <a href="#">News</a>
     </div>
     <!-- <div class="auth">

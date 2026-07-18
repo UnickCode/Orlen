@@ -19,7 +19,7 @@
       position: sticky; top: 0; z-index: 10;
     }
     nav a { color: #b3b3b3; text-decoration: none; font-size: 0.9rem; font-weight: 600; }
-    nav a:hover { color: #fff; }
+    nav a:hover, nav a.active { color: #fff; }
     .nav-brand { color: #1db954; font-size: 1.4rem; font-weight: 900; letter-spacing: -0.5px; margin-right: auto; text-decoration: none; }
 
     .app { display: flex; height: calc(100vh - 56px); }
@@ -185,7 +185,7 @@
 <nav>
   <a class="nav-brand" href="/">Orlen</a>
   <a href="/">Home</a>
-  <a href="/spotify/search/?tab=albums">Browse</a>
+  <a href="/spotify/search/?tab=albums" class= "active">Browse</a>
   {% if request.session.spotify_token %}
     <a href="/spotify/profile/">Profile</a>
     <a href="/spotify/logout/">Logout</a>
@@ -199,8 +199,8 @@
   <aside class="sidebar">
     <div>
       <div class="menu">
-        <a class="menu-item" href="/spotify/search/?tab=tracks">Tracks</a>
-        <a class="menu-item active-menu" href="/spotify/search/?tab=albums">Albums</a>
+        <a class="menu-item" href="/spotify/search/?tab=tracks">Browse</a>
+        <a class="menu-item active-menu " href="/spotify/search/?tab=albums">Albums</a>
         <a class="menu-item" href="/spotify/search/?tab=artists">Artists</a>
       </div>
       <h3 class="recent-title">RECENTLY PLAYED</h3>
@@ -271,8 +271,7 @@
         </div>
       {% else %}
         <div class="no-tracks">
-          <p>No tracks linked to this album yet.<br>
-             <a href="/admin/music/spotify-import/">Import tracks from Spotify →</a>
+          <p>No tracks uploaded to this album yet.<br>
           </p>
         </div>
       {% endif %}
