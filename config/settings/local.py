@@ -10,10 +10,12 @@ ALLOWED_HOSTS = ['*']
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [  # noqa
-    'rest_framework.renderers.JSONRenderer',
-    'rest_framework.renderers.BrowsableAPIRenderer',
+_replit_domains = [
+    d.strip()
+    for d in os.environ.get('REPLIT_DOMAINS', '').split(',')
+    if d.strip()
 ]
+
 
 INSTALLED_APPS += ['django_extensions'] if False else []  # noqa — enable by installing django-extensions
 
@@ -43,6 +45,12 @@ CSRF_TRUSTED_ORIGINS = (
         'http://127.0.0.1:8000',
     ]
 )
+
+ALLOWED_HOSTS = [
+    'dd7b9d40-06d4-4c3b-abce-7b45423a365a-00-1khlf334e7v9p.janeway.replit.dev',
+    'localhost',
+    '127.0.0.1',
+]
 
 # Cookies must be marked secure since all traffic arrives via HTTPS proxy
 SESSION_COOKIE_SECURE = True

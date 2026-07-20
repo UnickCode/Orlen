@@ -92,7 +92,46 @@ class Lyrics(models.Model):
         return f"{self.name} — {self.track_ref}"
 
 
+class Video(models.Model):
+        
+
+    CATEGORY_CHOICES = [
+        ("podcast", "Podcast"),
+        ("interview", "Interview"),
+        ("breakdown", "Album Breakdown"),
+        ("live", "Live"),
+        ("reaction", "Reaction"),
+        ("documentary", "Documentary"),
+    ]
+
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
+
+    title = models.CharField(max_length=255)
+
+    youtube_url = models.URLField()
+
+    youtube_video_id = models.CharField(max_length=100)
+
+    thumbnail = models.URLField()
+
+    channel = models.CharField(max_length=255)
+
+    description = models.TextField(blank=True)
+
+    published = models.DateTimeField(null=True, blank=True)
+
+    duration = models.CharField(max_length=50)
+
+    views = models.BigIntegerField(default=0)
+
+    category = models.CharField(
+        max_length=30,
+        choices=CATEGORY_CHOICES,
+    )
+
+    def __str__(self):
+        return self.title
     
     
         
-# artifacts/django-backend/apps/music/urls.py
+# /admin/music/spotify-import/

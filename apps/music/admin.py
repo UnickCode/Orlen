@@ -9,6 +9,11 @@ from django.http import JsonResponse
 
 from .models import Feature, Artist, Album, Track, Lyrics
 
+from .models import Video
+from .youtube import get_video_details
+
+from . import views
+
 
 # ── Model admins ───────────────────────────────────────────────────────────────
 
@@ -224,3 +229,46 @@ def _patched_get_urls(self):
 
 
 admin.site.__class__.get_urls = _patched_get_urls
+
+
+@admin.register(Video)
+class VideoAdmin(admin.ModelAdmin):
+
+    def get_urls(self):
+        urls = super().get_urls()
+
+        custom_urls = [
+            path(
+                "youtube-import/",
+                self.admin_site.admin_view(views.youtube_import),
+                name="music_youtube_import",
+            ),
+        ]
+
+        return custom_urls + urls
+
+    list_display = (
+        "title",
+        "artist",
+        "category",
+        "channel",
+    )
+
+    def save_model(self, request, obj, form, change):
+
+        if obj.youtube_url:
+
+            details = get_video_details(obj.youtube_url)
+
+            if details:
+                obj.youtube_video_id = details["video_id"]
+                obj.title = details["title"]
+                obj.channel = details["channel"]
+                obj.thumbnail = details["thumbnail"]
+                obj.duration = details["duration"]
+                obj.views = details["views"]
+
+        # Always save who uploaded the video
+        obj.uploaded_by = request.user
+
+        super().save_model(request, obj, form, change)

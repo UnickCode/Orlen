@@ -1,0 +1,287 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Import from YouTube{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+
+<style>
+
+.youtube-import{
+    max-width:800px;
+}
+
+.info-box{
+    background:#eef7ff;
+    border:1px solid #cce5ff;
+    padding:15px;
+    border-radius:8px;
+    margin-bottom:20px;
+}
+
+.fetch-form{
+    display:flex;
+    gap:10px;
+    margin-bottom:25px;
+}
+
+.fetch-form input{
+    flex:1;
+    padding:10px;
+}
+
+.fetch-form button{
+    padding:10px 20px;
+    cursor:pointer;
+}
+
+.video-card{
+
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:20px;
+
+}
+
+.video-header{
+
+    display:flex;
+    gap:20px;
+    margin-bottom:20px;
+
+}
+
+.video-header img{
+
+    width:220px;
+    border-radius:8px;
+
+}
+
+.field{
+
+    margin-bottom:15px;
+
+}
+
+.field label{
+
+    display:block;
+    margin-bottom:5px;
+    font-weight:bold;
+
+}
+
+.field input{
+
+    width:100%;
+    padding:10px;
+
+}
+
+.save-btn{
+
+    padding:12px 30px;
+    cursor:pointer;
+
+}
+
+.error-box{
+    margin-bottom:20px;
+    padding:12px;
+    border-radius:6px;
+    background:#f8d7da;
+    color:#842029;
+    border:1px solid #f5c2c7;
+}
+
+</style>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="youtube-import">
+
+<h1>🎥 Import from YouTube</h1>
+
+<div class="info-box">
+
+Paste a YouTube video link and click
+<strong>Fetch</strong>.
+
+The video information will automatically be loaded
+from YouTube.
+
+</div>
+
+{% if error %}
+<div class="error-box">
+        {{ error }}
+    </div>
+{% endif %}
+<form method="GET">
+
+<div class="fetch-form">
+
+<input
+type="text"
+name="url"
+placeholder="https://youtube.com/watch?v=..."
+value="{{ url }}"
+>
+
+<button type="submit">
+
+Fetch
+
+</button>
+
+</div>
+
+</form>
+
+
+
+{% if preview %}
+
+<div class="video-card">
+
+<div class="video-header">
+
+<img src="{{ preview.thumbnail }}">
+
+<div>
+
+<h2>{{ preview.title }}</h2>
+
+<p><strong>Channel:</strong> {{ preview.channel }}</p>
+
+<p><strong>Duration:</strong> {{ preview.duration }}</p>
+
+<p><strong>Views:</strong> {{ preview.views }}</p>
+
+</div>
+
+</div>
+
+
+
+<div class="field">
+
+<label>Category</label>
+
+<input
+type="text"
+value="{{ preview.category }}"
+id="category"
+>
+
+</div>
+
+
+
+<div class="field">
+
+<label>Artist</label>
+
+<input
+type="text"
+placeholder="Artist name"
+id="artist"
+>
+
+</div>
+
+
+
+<button type="button" class="save-btn" onclick="saveVideo(this)">
+
+    Save to Database
+
+</button>
+
+</div>
+
+{% endif %}
+
+</div>
+
+<script>
+
+const SAVE_URL = "/admin/music/youtube-import/save/";
+const CSRF = "{{ csrf_token }}";
+
+function value(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : "";
+}
+
+function saveVideo(button) {
+
+    button.disabled = true;
+    button.innerHTML = "Saving...";
+
+    const formData = new FormData();
+
+    formData.append("csrfmiddlewaretoken", CSRF);
+
+    formData.append("youtube_url", "{{ url }}");
+    formData.append("youtube_video_id", "{{ preview.video_id }}");
+
+    formData.append("title", "{{ preview.title }}");
+    formData.append("channel", "{{ preview.channel }}");
+    formData.append("thumbnail", "{{ preview.thumbnail }}");
+    formData.append("duration", "{{ preview.duration }}");
+    formData.append("views", "{{ preview.views }}");
+
+    formData.append("category", value("category"));
+    formData.append("artist", value("artist"));
+
+    fetch(SAVE_URL, {
+
+        method: "POST",
+        body: formData
+
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        button.disabled = false;
+
+        if (data.ok) {
+
+            button.innerHTML = "✓ Saved";
+
+            alert(data.message);
+
+        }
+
+        else {
+
+            button.innerHTML = "Save to Database";
+
+            alert(data.error);
+
+        }
+
+    })
+
+    .catch(() => {
+
+        button.disabled = false;
+
+        button.innerHTML = "Save to Database";
+
+        alert("Something went wrong.");
+
+    });
+
+}
+
+</script>
+
+{% endblock %}
